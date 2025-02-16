@@ -1,4 +1,4 @@
-# 🤖 Telegram Bot: Lite Bot
+# 🤖 Telegram Bot: MzTech Bot Tm
 
 Um bot do Telegram moderno e poderoso, integrado com várias APIs para fornecer funcionalidades avançadas, como busca de áudios, vídeos, geração de stickers, respostas de IA e muito mais!
 
@@ -51,8 +51,8 @@ Procure pelo bot no Telegram e inicie uma conversa com ele. Use o comando `/help
 
 ### 1. **Clone o Repositório**
 ```bash
-git clone https://github.com/seu-usuario/lite-bot.git
-cd lite-bot
+git clone https://github.com/Zacariasth85/mztech_bot_tm.git
+cd mztech_bot_tm
 ```
 
 ### 2. **Instalando as Dependências**
@@ -120,5 +120,4 @@ Se tiver dúvidas ou sugestões, entre em contato:
 ---
 
 Feito com ❤️ por Zacarias Thequimo.
-(https://github.com/Zacariasth85).
-```
+(https://github.com/Zacariasth85)
