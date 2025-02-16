@@ -38,6 +38,8 @@ O **Lite Bot** oferece uma variedade de comandos para facilitar sua vida no Tele
 ### 1. **Adicione o Bot no Telegram**
 Procure pelo bot no Telegram e inicie uma conversa com ele. Use o comando `/help` para ver a lista de comandos disponíveis.
 
+---
+
 ### 2. **Comandos Básicos**
 - Para tocar um áudio: `/playaudio MC Kevinho`
 - Para gerar uma resposta de IA: `/gpt4 Qual é a capital da França?`
@@ -119,5 +121,3 @@ Se tiver dúvidas ou sugestões, entre em contato:
 Feito com ❤️ por Zacarias Thequimo.
 (https://github.com/Zacariasth85).
 ```
-
----
