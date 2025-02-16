@@ -53,9 +53,10 @@ Procure pelo bot no Telegram e inicie uma conversa com ele. Use o comando `/help
 ```bash
 git clone https://github.com/seu-usuario/lite-bot.git
 cd lite-bot
+```
 
-### 2. **Instale as Dependências**
-```bash
+### 2. **Instalando as Dependências**
+```
 npm install
 ```
 
