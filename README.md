@@ -51,3 +51,73 @@ Procure pelo bot no Telegram e inicie uma conversa com ele. Use o comando `/help
 ```bash
 git clone https://github.com/seu-usuario/lite-bot.git
 cd lite-bot
+
+### 2. **Instale as Dependências**
+```bash
+npm install
+```
+
+### 3. **Configure as Chaves de API**
+Crie um arquivo `config.js` na raiz do projeto e adicione as chaves de API necessárias:
+
+```javascript
+module.exports = {
+  TELEGRAM_BOT_TOKEN: "SEU_TOKEN_DO_BOT_DO_TELEGRAM", // Token do bot do Telegram
+  SPIDER_API_TOKEN: "SEU_TOKEN_DA_API_DO_SPIDER_X",   // Token da API do Spider X
+  SPIDER_API_BASE_URL: "https://api.spiderx.com.br/api", // URL base da API do Spider X
+  GROQ_API_KEY: "SUA_CHAVE_DA_API_DA_GROQ_CLOUD", // Chave da API da Groq Cloud
+};
+```
+
+### 4. **Execute o Bot**
+```bash
+node index.js
+```
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+- **[Node.js](https://nodejs.org/)**: Ambiente de execução JavaScript.
+- **[Telegraf](https://telegraf.js.org/)**: Framework para criar bots do Telegram.
+- **[Axios](https://axios-http.com/)**: Cliente HTTP para fazer requisições à API.
+- **[Spider X API](https://api.spiderx.com.br/)**: API para busca de áudios, vídeos e stickers.
+- **[Groq Cloud](https://groq.com/)**: API de IA para geração de respostas.
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas! Siga os passos abaixo:
+
+1. Faça um fork do projeto.
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`).
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`).
+4. Push para a branch (`git push origin feature/nova-feature`).
+5. Abra um Pull Request.
+
+---
+
+## 📞 Contato
+
+Se tiver dúvidas ou sugestões, entre em contato:
+
+- **Email**: zacariasrichard85@gmail.com
+- **GitHub**: Zacariasth85
+(https://github.com/Zacariasth85)
+- **Telegram**:@maxthBot
+(https://t.me/maxthBot)
+
+---
+
+Feito com ❤️ por Zacarias Thequimo.
+(https://github.com/Zacariasth85).
+```
+
+---
