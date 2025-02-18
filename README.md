@@ -78,7 +78,11 @@ module.exports = {
 ```bash
 node index.js
 ```
+Ou
 
+```bash
+npm start
+```
 ---
 
 ## 🛠 Tecnologias Utilizadas
