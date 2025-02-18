@@ -1,8 +1,11 @@
-const { Telegraf } = require("telegraf");
+const { Telegraf, Markup } = require("telegraf");
 const { TELEGRAM_BOT_TOKEN } = require("./config");
 const { deepseekChat } = require("./services/deepseek-api");
-const { attp, gpt4, playAudio, playVideo, ttp, welcome } = require("./services/spider-x-api");
+const { attp, gpt4, playAudio, playVideo, ttp, welcome, deleteVideo, gerarImagem } = require("./services/spider-x-api");
+const fs = require("fs");
+const path = require("path");
 const { chatWithGroq } = require("./services/groq_cloud.js");
+const { deleteOldImages } = require("./Database/imagem");
 
 // Verifica se o token do bot do Telegram está configurado
 if (!TELEGRAM_BOT_TOKEN) {
@@ -28,26 +31,53 @@ Comandos disponíveis:
 /ttp <texto> - Cria um sticker TTP com o texto.
 /welcome <texto> <descrição> <url da imagem> - Gera uma imagem de boas-vindas.
 /deepseek.
-/chat.
+/gerarimagem.
   `);
 });
 
+
 // Comandando /chat para interragir com o bot
-bot.on("text", async (ctx) => {
+bot.on("text", async (ctx, next) => {
   const message = ctx.message.text;
 
-  // Se a mensagem começar com "/", ignoramos (pois é um comando)
+  // Se a mensagem começar com "/", passa para os handlers de comando normalmente
   if (message.startsWith("/")) {
-    return;
+    return next();
   }
 
+  // Caso contrário, responde com a API da Groq
   ctx.reply("Pensando... ⏳");
-
   try {
     const response = await chatWithGroq(message);
     ctx.reply(response);
   } catch (error) {
     ctx.reply("Erro ao processar sua mensagem. Tente novamente mais tarde.");
+  }
+});
+
+//Comando para gerar imagem
+bot.command("gerarimagem", async (ctx) => {
+  const text = ctx.message.text.split(" ").slice(1).join(" ");
+  if (!text) {
+    return ctx.reply("Você precisa informar uma descrição para gerar a imagem!");
+  }
+
+  try {
+    // Envia uma mensagem de carregamento
+    await ctx.reply("Gerando imagem... ⏳");
+
+    // Gera a imagem usando a API
+    const { path, description } = await gerarImagem(text);
+
+    // Envia a imagem gerada
+    await ctx.replyWithPhoto({ source: fs.createReadStream(path) }, {
+      caption: `🖼️ Imagem gerada para: "${description}"`,
+    });
+
+    // Exclui imagens antigas (mais de 7 dias)
+    await deleteOldImages();
+  } catch (error) {
+    ctx.reply(`Erro: ${error.message}`);
   }
 });
 
@@ -77,6 +107,10 @@ bot.command("playaudio", async (ctx) => {
   }
 
   try {
+    // Envia uma mensagem de carregamento
+    await ctx.reply("Carregando... ⏳");
+
+    // Busca o áudio usando a API
     const { name, url } = await playAudio(search);
 
     // Envia o nome da música
@@ -97,8 +131,21 @@ bot.command("playvideo", async (ctx) => {
   }
 
   try {
-    const data = await playVideo(search);
-    ctx.reply(`Vídeo encontrado: ${data.url}`);
+    // Envia uma mensagem de carregamento
+    await ctx.reply("Carregando... ⏳");
+
+    // Busca o vídeo usando a API
+    const { id, path: videoPath, title } = await playVideo(search);
+
+    // Envia o nome do vídeo
+    await ctx.reply(`🎥 ${title}`);
+
+    // Envia o vídeo
+    await ctx.replyWithVideo({ source: videoPath });
+
+    // Após o envio bem-sucedido, exclui o vídeo do banco de dados e do sistema
+    await deleteVideo(id);
+    fs.unlinkSync(videoPath);
   } catch (error) {
     ctx.reply(`Erro: ${error.message}`);
   }
