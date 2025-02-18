@@ -64,11 +64,13 @@ npm install
 Crie um arquivo `config.js` na raiz do projeto e adicione as chaves de API necessárias:
 
 ```javascript
+require('dotenv').config(); // Carrega as variáveis de ambiente
+
 module.exports = {
-  TELEGRAM_BOT_TOKEN: "SEU_TOKEN_DO_BOT_DO_TELEGRAM", // Token do bot do Telegram
-  SPIDER_API_TOKEN: "SEU_TOKEN_DA_API_DO_SPIDER_X",   // Token da API do Spider X
-  SPIDER_API_BASE_URL: "https://api.spiderx.com.br/api", // URL base da API do Spider X
-  GROQ_API_KEY: "SUA_CHAVE_DA_API_DA_GROQ_CLOUD", // Chave da API da Groq Cloud
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+  SPIDER_API_TOKEN: process.env.SPIDER_API_TOKEN,
+  SPIDER_API_BASE_URL: process.env.SPIDER_API_BASE_URL,
 };
 ```
 
