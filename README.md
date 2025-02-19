@@ -31,6 +31,13 @@ O **Lite Bot** oferece uma variedade de comandos para facilitar sua vida no Tele
 - `/cep <CEP>`: Consulta informações de um CEP.
 - `/ping`: Verifica se o bot está online.
 
+### ⚠️ **Aviso**
+- Alguns comandos não estão funcionando ou não estão completamente implementados:
+- `/attp`.
+- `/ttp`.
+- `/ping`.
+- `/groq`: para interagir com a API da groq_cloud, basta enviar qualquer mensagem sem usar o prefixo "/".
+
 ---
 
 ## 🚀 Como Usar
