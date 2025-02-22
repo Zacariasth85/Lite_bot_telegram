@@ -3,7 +3,7 @@ const path = require("path");
 const moment = require("moment");
 
 // Caminho para o arquivo do banco de dados
-const dbPath = path.join(__dirname, "images.db");
+const dbPath = path.join(__dirname, "imagens.db");
 
 // Conecta ao banco de dados (ou cria se não existir)
 const db = new sqlite3.Database(dbPath);

@@ -1,4 +1,4 @@
-# 🤖 Telegram Bot: MzTech Bot Tm
+# 🤖 Telegram Bot: Lite Bot telegram
 
 Um bot do Telegram moderno e poderoso, integrado com várias APIs para fornecer funcionalidades avançadas, como busca de áudios, vídeos, geração de stickers, respostas de IA e muito mais!
 
@@ -31,6 +31,13 @@ O **Lite Bot** oferece uma variedade de comandos para facilitar sua vida no Tele
 - `/cep <CEP>`: Consulta informações de um CEP.
 - `/ping`: Verifica se o bot está online.
 
+### ⚠️ **Aviso**
+- Alguns comandos não estão funcionando ou não estão completamente implementados:
+- `/attp`.
+- `/ttp`.
+- `/ping`.
+- `/groq`: para interagir com a API da groq_cloud, basta enviar qualquer mensagem sem usar o prefixo "/".
+
 ---
 
 ## 🚀 Como Usar
@@ -51,8 +58,8 @@ Procure pelo bot no Telegram e inicie uma conversa com ele. Use o comando `/help
 
 ### 1. **Clone o Repositório**
 ```bash
-git clone https://github.com/Zacariasth85/mztech_bot_tm.git
-cd mztech_bot_tm
+git clone https://github.com/Zacariasth85/Lite_bot_telegram.git
+cd Lite_bot_telegram
 ```
 
 ### 2. **Instalando as Dependências**
@@ -64,11 +71,13 @@ npm install
 Crie um arquivo `config.js` na raiz do projeto e adicione as chaves de API necessárias:
 
 ```javascript
+require('dotenv').config(); // Carrega as variáveis de ambiente
+
 module.exports = {
-  TELEGRAM_BOT_TOKEN: "SEU_TOKEN_DO_BOT_DO_TELEGRAM", // Token do bot do Telegram
-  SPIDER_API_TOKEN: "SEU_TOKEN_DA_API_DO_SPIDER_X",   // Token da API do Spider X
-  SPIDER_API_BASE_URL: "https://api.spiderx.com.br/api", // URL base da API do Spider X
-  GROQ_API_KEY: "SUA_CHAVE_DA_API_DA_GROQ_CLOUD", // Chave da API da Groq Cloud
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+  SPIDER_API_TOKEN: process.env.SPIDER_API_TOKEN,
+  SPIDER_API_BASE_URL: process.env.SPIDER_API_BASE_URL,
 };
 ```
 
@@ -76,7 +85,11 @@ module.exports = {
 ```bash
 node index.js
 ```
+Ou
 
+```bash
+npm start
+```
 ---
 
 ## 🛠 Tecnologias Utilizadas
@@ -90,7 +103,6 @@ node index.js
 ---
 
 ## 📄 Licença
-
 Este projeto está licenciado sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
@@ -113,11 +125,11 @@ Se tiver dúvidas ou sugestões, entre em contato:
 
 - **Email**: zacariasrichard85@gmail.com
 - **GitHub**: Zacariasth85
-(https://github.com/Zacariasth85)
+https://github.com/Zacariasth85
 - **Telegram**:@maxthBot
-(https://t.me/maxthBot)
+https://t.me/maxthBot
 
 ---
 
-Feito com ❤️ por Zacarias Thequimo.
-(https://github.com/Zacariasth85)
+Feito por Zacarias Thequimo.
+https://github.com/Zacariasth85
