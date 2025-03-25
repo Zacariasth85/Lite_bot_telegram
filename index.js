@@ -6,7 +6,8 @@ const fs = require("fs");
 const path = require("path");
 const { chatWithGroq } = require("./services/groq_cloud.js");
 const { deleteOldImages } = require("./Database/imagem");
-const { getMessageStats, getTopCommands } = require("./Database/statics");
+const { getMessageStats, getTopCommands, logMessage } = require("./Database/statics");
+const { addMessage, getRecentMessages, cleanOldConversations } = require("./Database/context");
 const os = require("os");
 
 // Verifica se o token do bot do Telegram está configurado
@@ -40,28 +41,88 @@ Comandos disponíveis:
 /attp <texto> - Cria um sticker ATT com o texto.
 /ttp <texto> - Cria um sticker TTP com o texto.
 /welcome <texto> <descrição> <url da imagem> - Gera uma imagem de boas-vindas.
-/deepseek.
-/gerarimagem.
-/estatisticas.
+/deepseek - Interagir com a DeepSeek AI.
+/gerarimagem - Gera uma imagem com base na descrição.
+/estatisticas - Mostra estatísticas do bot.
+/limparcontexto - Limpa o histórico de conversa atual.
   `);
 });
 
+// Comando para limpar o contexto da conversa
+bot.command("limparcontexto", async (ctx) => {
+  const chatId = ctx.chat.id;
+  const userId = ctx.from.id;
+  
+  try {
+    // Cria uma nova conversa (efetivamente abandonando a anterior)
+    const conversationId = await getOrCreateConversation(chatId, userId);
+    
+    // Limpa todas as mensagens da conversa
+    await new Promise((resolve, reject) => {
+      db.run(
+        "DELETE FROM messages WHERE conversation_id = ?",
+        [conversationId],
+        (err) => {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
+    });
+    
+    ctx.reply("✅ Contexto da conversa foi limpo. Podemos começar uma nova conversa!");
+  } catch (error) {
+    console.error("Erro ao limpar contexto:", error);
+    ctx.reply("Erro ao limpar o contexto. Tente novamente mais tarde.");
+  }
+});
 
 // Comandando /chat para interragir com o bot
 bot.on("text", async (ctx, next) => {
   const message = ctx.message.text;
+  const chatId = ctx.chat.id;
+  const userId = ctx.from.id;
 
   // Se a mensagem começar com "/", passa para os handlers de comando normalmente
   if (message.startsWith("/")) {
     return next();
   }
 
-  // Caso contrário, responde com a API da Groq
-  ctx.reply("Pensando... ⏳");
   try {
-    const response = await chatWithGroq(message);
+    // Registra a mensagem nas estatísticas
+    await logMessage(chatId, userId, message, false);
+    
+    // Salva a mensagem do usuário no contexto
+    await addMessage(chatId, userId, "user", message);
+    
+    // Obtém as mensagens recentes para construir o contexto
+    const recentMessages = await getRecentMessages(chatId, userId);
+    const formattedMessages = recentMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    
+    // Adiciona a mensagem atual se não estiver na lista
+    if (!formattedMessages.some(msg => 
+      msg.role === "user" && msg.content === message)) {
+      formattedMessages.push({ role: "user", content: message });
+    }
+    
+    ctx.reply("Pensando... ⏳");
+    
+    // Passa o contexto completo para a API da Groq
+    const response = await chatWithGroq(formattedMessages);
+    
+    // Salva a resposta no contexto
+    await addMessage(chatId, userId, "assistant", response);
+    
     ctx.reply(response);
+    
+    // Limpa conversas antigas a cada 100 interações (aproximadamente)
+    if (Math.random() < 0.01) {
+      await cleanOldConversations();
+    }
   } catch (error) {
+    console.error("Erro:", error);
     ctx.reply("Erro ao processar sua mensagem. Tente novamente mais tarde.");
   }
 });
@@ -92,6 +153,18 @@ function checkCommandLimit(userId, command) {
   return true;
 }
 
+// Função para verificar se um usuário é admin em um grupo
+async function isAdmin(ctx) {
+  try {
+    const chatId = ctx.chat.id;
+    const userId = ctx.from.id;
+    const chatMember = await ctx.telegram.getChatMember(chatId, userId);
+    return ["creator", "administrator"].includes(chatMember.status);
+  } catch (error) {
+    console.error("Erro ao verificar status de admin:", error);
+    return false;
+  }
+}
 
 //Comando de estatisticas
 bot.command("estatisticas", async (ctx) => {
@@ -143,11 +216,15 @@ bot.command("estatisticas", async (ctx) => {
 
 //calcular o armazenamento
 async function getStorageUsage() {
-     const stats = fs.statSync("Database/images");
-     const sizeInMB = stats.size / 1024 / 1024; // Tamanho em MB
-     return sizeInMB.toFixed(2);
-   }
-
+  try {
+    const stats = fs.statSync("Database/images");
+    const sizeInMB = stats.size / 1024 / 1024; // Tamanho em MB
+    return sizeInMB.toFixed(2);
+  } catch (error) {
+    console.error("Erro ao calcular armazenamento:", error);
+    return "N/A";
+  }
+}
 
 //Comando para gerar imagem
 bot.command("gerarimagem", async (ctx) => {
@@ -165,6 +242,9 @@ bot.command("gerarimagem", async (ctx) => {
     // Envia uma mensagem de carregamento
     await ctx.reply("Gerando imagem... ⏳");
 
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/gerarimagem ${text}`, true);
+
     // Gera a imagem usando a API
     const { path, description } = await gerarImagem(text);
 
@@ -180,15 +260,18 @@ bot.command("gerarimagem", async (ctx) => {
   }
 });
 
-
 // Comando para interagir com a DeepSeek
 bot.command("deepseek", async (ctx) => {
+  const userId = ctx.from.id;
   const prompt = ctx.message.text.split(" ").slice(1).join(" ");
   if (!prompt) {
     return ctx.reply("Você precisa informar uma mensagem para a DeepSeek!");
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/deepseek ${prompt}`, true);
+    
     const response = await deepseekChat(prompt);
 
     // Envia a resposta da DeepSeek
@@ -211,6 +294,9 @@ bot.command("playaudio", async (ctx) => {
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/playaudio ${search}`, true);
+    
     await ctx.reply("Buscando a música... ⏳");
 
     const { name, path } = await playAudio(search);
@@ -221,7 +307,6 @@ bot.command("playaudio", async (ctx) => {
     ctx.reply(`Erro: ${error.message}`);
   }
 }); 
-
 
 // Comando para tocar vídeo
 bot.command("playvideo", async (ctx) => {
@@ -236,6 +321,9 @@ bot.command("playvideo", async (ctx) => {
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/playvideo ${search}`, true);
+    
     // Envia uma mensagem de carregamento
     await ctx.reply("Buscando o vídeo... ⏳");
 
@@ -258,12 +346,16 @@ bot.command("playvideo", async (ctx) => {
 
 // Comando para usar GPT-4
 bot.command("gpt4", async (ctx) => {
+  const userId = ctx.from.id;
   const text = ctx.message.text.split(" ").slice(1).join(" ");
   if (!text) {
     return ctx.reply("Você precisa informar o texto!");
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/gpt4 ${text}`, true);
+    
     const response = await gpt4(text);
     ctx.reply(response);
   } catch (error) {
@@ -273,12 +365,16 @@ bot.command("gpt4", async (ctx) => {
 
 // Comando para gerar sticker ATT
 bot.command("attp", async (ctx) => {
+  const userId = ctx.from.id;
   const text = ctx.message.text.split(" ").slice(1).join(" ");
   if (!text) {
     return ctx.reply("Você precisa informar o texto!");
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/attp ${text}`, true);
+    
     const stickerUrl = await attp(text);
     ctx.replyWithSticker(stickerUrl);
   } catch (error) {
@@ -288,12 +384,16 @@ bot.command("attp", async (ctx) => {
 
 // Comando para gerar sticker TTP
 bot.command("ttp", async (ctx) => {
+  const userId = ctx.from.id;
   const text = ctx.message.text.split(" ").slice(1).join(" ");
   if (!text) {
     return ctx.reply("Você precisa informar o texto!");
   }
 
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/ttp ${text}`, true);
+    
     const stickerUrl = await ttp(text);
     ctx.replyWithSticker(stickerUrl);
   } catch (error) {
@@ -303,6 +403,7 @@ bot.command("ttp", async (ctx) => {
 
 // Comando para gerar imagem de boas-vindas
 bot.command("welcome", async (ctx) => {
+  const userId = ctx.from.id;
   const args = ctx.message.text.split(" ").slice(1);
   if (args.length < 3) {
     return ctx.reply("Você precisa informar o texto, descrição e URL da imagem!");
@@ -310,6 +411,9 @@ bot.command("welcome", async (ctx) => {
 
   const [text, description, imageURL] = args;
   try {
+    // Registra o comando nas estatísticas
+    await logMessage(ctx.chat.id, userId, `/welcome ${text} ${description} ${imageURL}`, true);
+    
     const welcomeImageUrl = await welcome(text, description, imageURL);
     ctx.replyWithPhoto(welcomeImageUrl);
   } catch (error) {
@@ -322,6 +426,15 @@ bot.launch();
 
 console.log("✅Bot iniciado com sucesso!🚀");
 
+// Limpa conversas antigas ao iniciar
+cleanOldConversations()
+  .then(count => console.log(`Limpeza inicial: ${count} conversas antigas removidas`))
+  .catch(err => console.error("Erro na limpeza inicial:", err));
+
 // Capturar erros
 process.on("uncaughtException", (err) => console.error("Erro não tratado:", err));
 process.on("unhandledRejection", (err) => console.error("Rejeição não tratada:", err));
+
+// Capturar encerramento para fechar corretamente
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
